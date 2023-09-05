@@ -1,0 +1,11 @@
+openai:
+  embedding: 
+    model_name: "text-embedding-ada-002"
+    api_key: "API-KEY"
+    dimension: 1536
+
+pinecone: 
+  api_key: "467cd461-3002-4bc1-9366-464edff9b97b"  
+  environment: "gcp-starter"
+  index: "vector-database"
+  path: "./Medical_Knowledge_PDF"
