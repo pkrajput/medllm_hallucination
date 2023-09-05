@@ -28,7 +28,7 @@ parser.add_argument(
 )
 
 if __name__ == "__main__":
-    
+
     args = parser.parse_args()
 
     # Check if a GPU is available
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # Load the dataset
     dataset = load_dataset("medalpaca/medical_meadow_wikidoc")
     df = pd.DataFrame(dataset["train"])
-    
+
     if args.cut == "small":
         df = df.head(1000)
 
@@ -72,11 +72,15 @@ if __name__ == "__main__":
             question = row["input"]
             context = row["output"]
             responses = []
-            
+
             for _ in range(num_responses):
                 input_text = f"Context: {context}\n\nQuestion: {question}\n\nAnswer: "
                 input_ids = tokenizer.encode(
-                    input_text, return_tensors="pt", padding=True, truncation=True, max_length=max_length
+                    input_text,
+                    return_tensors="pt",
+                    padding=True,
+                    truncation=True,
+                    max_length=max_length,
                 ).to(device)
                 attention_mask = torch.ones_like(input_ids).to(device)
 
@@ -89,7 +93,7 @@ if __name__ == "__main__":
                     num_return_sequences=num_responses,
                     no_repeat_ngram_size=2,
                 )
-                
+
                 # Decode and add responses
                 for j in range(num_responses):
                     response = tokenizer.decode(output[j], skip_special_tokens=True)
@@ -114,4 +118,3 @@ if __name__ == "__main__":
 
     df.to_csv(output_csv_file, index=False)
     print(f"Saved generated responses to {output_csv_file}")
-

@@ -25,7 +25,8 @@ if __name__ == "__main__":
 
     ke = KnowledgeExtractor()
     query = args.query
-    query_result = ke.get_related_knowledge(query, top_k=args.number_of_matches, passback_gpt=args.passback_gpt)
-    
-    
+    query_result = ke.get_related_knowledge(
+        query, top_k=args.number_of_matches, passback_gpt=args.passback_gpt
+    )
+
     print(query_result)

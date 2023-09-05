@@ -3,19 +3,33 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments
 import wandb
 import pandas as pd
+import argparse
 
-df = pd.read_csv("/workspace/selfcheckgpt/generated_responses.csv")
+parser = argparse.ArgumentParser()
 
-df_train = df.head(8000)
-df_eval = df.tail(2000)
+parser.add_argument(
+    "--response_csv",
+    default="/workspace/selfcheckgpt/generated_responses.csv",
+    type=str,
+)
 
+parser.add_argument(
+    "--model_save_path",
+    default="/workspace/storage/prateek/gpt2",
+    type=str,
+)
 
-# Load the GPT-2 model and tokenizer
-model_name = "gpt2"
-model = AutoModelForCausalLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-tokenizer.pad_token = tokenizer.eos_token
+parser.add_argument(
+    "--output_dir",
+    default="/workspace/output_ft",
+    type=str,
+)
 
+parser.add_argument(
+    "--logging_dir",
+    default="/workspace/logs_ft",
+    type=str,
+)
 
 # Define your custom dataset
 class CustomDataset(Dataset):
@@ -48,24 +62,6 @@ class CustomDataset(Dataset):
         }
 
 
-# Define the training arguments
-training_args = TrainingArguments(
-    output_dir="/workspace/output_ft",
-    evaluation_strategy="steps",
-    eval_steps=500,
-    save_steps=500,
-    logging_dir="/workspace/logs_ft",
-    logging_steps=100,
-    num_train_epochs=8,
-    per_device_train_batch_size=1,
-    per_device_eval_batch_size=1,
-    learning_rate=5e-5,
-    save_total_limit=2,
-    report_to="wandb",
-    run_name="gpt2_finetuning",
-)
-
-
 # Define the training function
 def train_function(args, model, train_dataset, eval_dataset):
     trainer = Trainer(
@@ -77,14 +73,45 @@ def train_function(args, model, train_dataset, eval_dataset):
     trainer.train()
 
 
-# Assuming you have df_train defined with 'input' and 'output' columns
-train_dataset = CustomDataset(tokenizer, df_train)
-eval_dataset = CustomDataset(tokenizer, df_eval)
+if __name__ == "__main__":
+    args = parser.parse_args()
 
-# Initialize Weights & Biases
-wandb.init(project="gpt2_finetuning")
+    df = pd.read_csv(args.response_csv)
 
-# Train the model
-train_function(training_args, model, train_dataset, eval_dataset)
+    df_train = df.head(8000)
+    df_eval = df.tail(2000)
 
-model.save_pretrained("/workspace/storage/prateek/gpt2")
+    # Load the GPT-2 model and tokenizer
+    model_name = "gpt2"
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer.pad_token = tokenizer.eos_token
+
+    # Define the training arguments
+    training_args = TrainingArguments(
+        output_dir=args.output_dir,
+        evaluation_strategy="steps",
+        eval_steps=500,
+        save_steps=500,
+        logging_dir=args.logging_dir,
+        logging_steps=100,
+        num_train_epochs=8,
+        per_device_train_batch_size=1,
+        per_device_eval_batch_size=1,
+        learning_rate=5e-5,
+        save_total_limit=2,
+        report_to="wandb",
+        run_name="gpt2_finetuning",
+    )
+
+    # Assuming you have df_train defined with 'input' and 'output' columns
+    train_dataset = CustomDataset(tokenizer, df_train)
+    eval_dataset = CustomDataset(tokenizer, df_eval)
+
+    # Initialize Weights & Biases
+    wandb.init(project="gpt2_finetuning")
+
+    # Train the model
+    train_function(training_args, model, train_dataset, eval_dataset)
+
+    model.save_pretrained(args.model_saved_path)

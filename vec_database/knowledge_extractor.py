@@ -11,7 +11,7 @@ class KnowledgeExtractor:
             self.model_name = config["openai"]["embedding"]["model_name"]
             openai.api_key = config["openai"]["embedding"]["api_key"]
 
-    def get_related_knowledge(self, query, top_k=3, passback_gpt = False):
+    def get_related_knowledge(self, query, top_k=3, passback_gpt=False):
 
         if len(query) == 0:
             return [""]
@@ -22,14 +22,13 @@ class KnowledgeExtractor:
         )
 
         contexts = [x["metadata"]["text"] for x in res["matches"]]
-        
+
         if passback_gpt == False:
-        
+
             return contexts
-        
+
         elif passback_gpt == True:
-            
-    
+
             joined_context = "".join(contexts)
 
             chat_text = [
